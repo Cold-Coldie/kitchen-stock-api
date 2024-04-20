@@ -16,81 +16,28 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
-        // Create a custom ErrorResponse object
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            ItemNotFoundException.class,
+            MeasuringUnitNotFoundException.class,
+            UserAlreadyExistsException.class,
+            ItemAlreadyExistsException.class,
+            MeasuringUnitAlreadyExistsException.class,
+            UnexpectedErrorException.class
+    })
+
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
+        HttpStatus status = getStatus(ex);
 
         List<String> messages = new ArrayList<>();
         messages.add(ex.getMessage());
 
-        ErrorResponse response = new ErrorResponse("404", "User Not Found", messages);
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(ItemNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleItemNotFoundException(ItemNotFoundException ex) {
-        // Create a custom ErrorResponse object
-
-        List<String> messages = new ArrayList<>();
-        messages.add(ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse("404", "Item Not Found", messages);
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(MeasuringUnitNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleItemNotFoundException(MeasuringUnitNotFoundException ex) {
-        // Create a custom ErrorResponse object
-
-        List<String> messages = new ArrayList<>();
-        messages.add(ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse("404", "Measuring Unit Not Found", messages);
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
-        // Create a custom ErrorResponse object
-
-        List<String> messages = new ArrayList<>();
-        messages.add(ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse("409", "User Already Exists", messages);
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(ItemAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleItemAlreadyExistsException(ItemAlreadyExistsException ex) {
-        // Create a custom ErrorResponse object
-
-        List<String> messages = new ArrayList<>();
-        messages.add(ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse("409", "Item Already Exists", messages);
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(MeasuringUnitAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleMeasuringUnitAlreadyExistsException(MeasuringUnitAlreadyExistsException ex) {
-        // Create a custom ErrorResponse object
-
-        List<String> messages = new ArrayList<>();
-        messages.add(ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse("409", "Measuring Unit Already Exists", messages);
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(UnexpectedErrorException.class)
-    public ResponseEntity<ErrorResponse> handleUnexpectedErrorException(UnexpectedErrorException ex) {
-        // Create a custom ErrorResponse object
-
-        List<String> messages = new ArrayList<>();
-        messages.add(ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse("500", "Internal Server Error", messages);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        ErrorResponse response = new ErrorResponse(
+                String.valueOf(status.value()),
+                status.getReasonPhrase(),
+                messages
+        );
+        return new ResponseEntity<>(response, status);
     }
 
     @Override
@@ -108,4 +55,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse response = new ErrorResponse("" + status.value(), "Bad Request", errors);
         return new ResponseEntity<>(response, status);
     }
+
+    private HttpStatus getStatus(Exception ex) {
+        if (ex instanceof UserNotFoundException ||
+                ex instanceof ItemNotFoundException ||
+                ex instanceof MeasuringUnitNotFoundException
+        ) {
+            return HttpStatus.NOT_FOUND;
+        } else if (ex instanceof UserAlreadyExistsException ||
+                ex instanceof ItemAlreadyExistsException ||
+                ex instanceof MeasuringUnitAlreadyExistsException) {
+            return HttpStatus.CONFLICT;
+        } else {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+    }
+
 }
