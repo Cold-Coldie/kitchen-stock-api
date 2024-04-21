@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface MeasuringUnitRepository extends JpaRepository<MeasuringUnit, Long> {
 
-    List<MeasuringUnit> findByUserId(Long userId);
+    List<MeasuringUnit> findAllByUserEmailEquals(String email);
 
-    Optional<MeasuringUnit> findByIdAndUserId(Long measuringUnitId, Long userId);
+    Optional<MeasuringUnit> findByUserEmailEqualsAndIdEquals(String email, Long id);
 
-    Optional<MeasuringUnit> findByNameEqualsAndUserId(String name, Long userId);
+    Optional<MeasuringUnit> findByUserEmailEqualsAndNameEquals(String email, String name);
 }

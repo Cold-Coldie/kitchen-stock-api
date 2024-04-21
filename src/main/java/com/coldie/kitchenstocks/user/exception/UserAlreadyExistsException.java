@@ -1,4 +1,4 @@
-package com.coldie.kitchenstocks.exception;
+package com.coldie.kitchenstocks.user.exception;
 
 public class UserAlreadyExistsException extends RuntimeException {
     public UserAlreadyExistsException(String message) {

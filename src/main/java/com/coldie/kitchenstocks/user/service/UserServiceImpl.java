@@ -1,10 +1,14 @@
 package com.coldie.kitchenstocks.user.service;
 
-import com.coldie.kitchenstocks.exception.UserAlreadyExistsException;
-import com.coldie.kitchenstocks.exception.UserNotFoundException;
+import com.coldie.kitchenstocks.config.SecurityUtils;
+import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
+import com.coldie.kitchenstocks.user.exception.UserAlreadyExistsException;
+import com.coldie.kitchenstocks.user.exception.UserNotFoundException;
 import com.coldie.kitchenstocks.user.model.User;
 import com.coldie.kitchenstocks.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,20 +20,15 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id: " + id + " not found."));
-    }
+    public User getUser() {
+        try {
+            UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
+            if (userDetails == null) throw new UserNotFoundException("User with this email does not exist.");
 
-    @Override
-    public User createUser(User user) {
-        Optional<User> optionalUser = userRepository.findByEmailEquals(user.getEmail());
-
-        if (optionalUser.isPresent()) {
-            throw new UserAlreadyExistsException("User with this email already exists.");
+            return userRepository.findByEmailEquals(userDetails.getUsername())
+                    .orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
+        } catch (UnexpectedErrorException exception) {
+            throw new UnexpectedErrorException("An unexpected error occurred.");
         }
-
-        return userRepository.save(user);
     }
-
-
 }

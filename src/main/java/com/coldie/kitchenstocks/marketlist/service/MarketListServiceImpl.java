@@ -1,14 +1,13 @@
-package com.coldie.kitchenstocks.item.service;
+package com.coldie.kitchenstocks.marketlist.service;
 
 import com.coldie.kitchenstocks.config.SecurityUtils;
 import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
-import com.coldie.kitchenstocks.item.exception.ItemAlreadyExistsException;
 import com.coldie.kitchenstocks.item.exception.ItemNotFoundException;
 import com.coldie.kitchenstocks.item.model.Item;
 import com.coldie.kitchenstocks.item.request.ItemRequest;
-import com.coldie.kitchenstocks.item.respository.ItemRepository;
+import com.coldie.kitchenstocks.marketlist.exception.MarketListItemAlreadyExistsException;
 import com.coldie.kitchenstocks.marketlist.model.MarketList;
-import com.coldie.kitchenstocks.marketlist.service.MarketListService;
+import com.coldie.kitchenstocks.marketlist.repository.MarketListRepository;
 import com.coldie.kitchenstocks.measuringUnit.model.MeasuringUnit;
 import com.coldie.kitchenstocks.measuringUnit.repository.MeasuringUnitRepository;
 import com.coldie.kitchenstocks.user.exception.UserNotFoundException;
@@ -21,10 +20,10 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class ItemServiceImpl implements ItemService {
+public class MarketListServiceImpl implements MarketListService {
 
     @Autowired
-    private ItemRepository itemRepository;
+    private MarketListRepository marketListRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -32,50 +31,43 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private MeasuringUnitRepository measuringUnitRepository;
 
-    @Autowired
-    private MarketListService marketListService;
-
     @Override
-    public Item createItem(ItemRequest itemRequest) {
+    public MarketList createMarketListItem(ItemRequest itemRequest) {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new UserNotFoundException("User with this email does not exist.");
 
-            Optional<Item> optionalItem = itemRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName());
+            Optional<MarketList> optionalMarketList = marketListRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName());
 
-            if (optionalItem.isPresent())
-                throw new ItemAlreadyExistsException("Item with the name: " + itemRequest.getName() + " already exists.");
+            if (optionalMarketList.isPresent())
+                throw new MarketListItemAlreadyExistsException("Market list item with the name: " + itemRequest.getName() + " already exists.");
 
             User user = userRepository.findByEmailEquals(userDetails.getUsername()).orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
 
             MeasuringUnit measuringUnit = measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
                     .orElseThrow(() -> new ItemNotFoundException("Measuring unit with this id: " + itemRequest.getMeasuringUnitId() + " does not exist."));
 
-            if (itemRequest.getQuantity() <= itemRequest.getLowLimit()) {
-                marketListService.createMarketListItem(itemRequest);
-            }
-
-            return itemRepository.save(getItemToSave(user, measuringUnit, itemRequest));
+            return marketListRepository.save(getMarketListItemToSave(user, measuringUnit, itemRequest));
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
     }
 
-    public static Item getItemToSave(User user, MeasuringUnit measuringUnit, ItemRequest itemRequest) {
-        Item item = new Item();
+    public static MarketList getMarketListItemToSave(User user, MeasuringUnit measuringUnit, ItemRequest itemRequest) {
+        MarketList marketListItem = new MarketList();
 
-        item.setName(itemRequest.getName());
-        item.setQuantity(itemRequest.getQuantity());
-        item.setLowLimit(itemRequest.getLowLimit());
-        item.setPrice(itemRequest.getPrice());
-        item.setCurrencyName(itemRequest.getCurrencyName());
-        item.setCurrencySymbol(itemRequest.getCurrencySymbol());
+        marketListItem.setName(itemRequest.getName());
+        marketListItem.setQuantity(1);
+        marketListItem.setLowLimit(itemRequest.getLowLimit());
+        marketListItem.setPrice(itemRequest.getPrice());
+        marketListItem.setCurrencyName(itemRequest.getCurrencyName());
+        marketListItem.setCurrencySymbol(itemRequest.getCurrencySymbol());
 
-        item.setUser(user);
-        item.setMeasuringUnit(measuringUnit);
+        marketListItem.setUser(user);
+        marketListItem.setMeasuringUnit(measuringUnit);
 
-        item.setNeedRestock(item.getQuantity() <= item.getLowLimit());
+        marketListItem.setNeedRestock(marketListItem.getQuantity() <= marketListItem.getLowLimit());
 
-        return item;
+        return marketListItem;
     }
 }

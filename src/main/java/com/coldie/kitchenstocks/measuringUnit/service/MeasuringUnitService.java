@@ -6,9 +6,8 @@ import java.util.List;
 
 public interface MeasuringUnitService {
 
-    List<MeasuringUnit> getAllMeasuringUnitsByUserId(Long userId);
+    List<MeasuringUnit> getAllMeasuringUnits();
 
-    MeasuringUnit getMeasuringUnitByIdAndUserId(Long measuringUnitId, Long userId);
 
     MeasuringUnit createMeasuringUnit(MeasuringUnit measuringUnit);
 }

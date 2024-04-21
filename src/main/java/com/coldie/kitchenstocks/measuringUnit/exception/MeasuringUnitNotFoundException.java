@@ -1,4 +1,4 @@
-package com.coldie.kitchenstocks.exception;
+package com.coldie.kitchenstocks.measuringUnit.exception;
 
 public class MeasuringUnitNotFoundException extends RuntimeException {
     public MeasuringUnitNotFoundException(String message) {

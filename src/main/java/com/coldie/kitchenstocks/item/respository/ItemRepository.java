@@ -16,5 +16,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findByNameContainingAndUserId(String name, Long userId);
 
-    Optional<Item> findByNameEqualsAndUserId(String name, Long userId);
+    Optional<Item> findByUserEmailEqualsAndNameEquals(String email, String name);
 }

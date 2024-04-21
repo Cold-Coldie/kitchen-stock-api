@@ -1,9 +1,14 @@
 package com.coldie.kitchenstocks.exception;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
+import com.coldie.kitchenstocks.item.exception.ItemAlreadyExistsException;
+import com.coldie.kitchenstocks.item.exception.ItemNotFoundException;
+import com.coldie.kitchenstocks.marketlist.exception.MarketListItemAlreadyExistsException;
+import com.coldie.kitchenstocks.marketlist.exception.MarketListItemNotFoundException;
+import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitAlreadyExistsException;
+import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitNotFoundException;
+import com.coldie.kitchenstocks.user.exception.UserAlreadyExistsException;
+import com.coldie.kitchenstocks.user.exception.UserNotFoundException;
+import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,9 +25,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             UserNotFoundException.class,
             ItemNotFoundException.class,
             MeasuringUnitNotFoundException.class,
+            MarketListItemNotFoundException.class,
             UserAlreadyExistsException.class,
             ItemAlreadyExistsException.class,
             MeasuringUnitAlreadyExistsException.class,
+            MarketListItemAlreadyExistsException.class,
             UnexpectedErrorException.class
     })
 
@@ -59,16 +66,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private HttpStatus getStatus(Exception ex) {
         if (ex instanceof UserNotFoundException ||
                 ex instanceof ItemNotFoundException ||
-                ex instanceof MeasuringUnitNotFoundException
+                ex instanceof MeasuringUnitNotFoundException ||
+                ex instanceof MarketListItemNotFoundException
         ) {
             return HttpStatus.NOT_FOUND;
         } else if (ex instanceof UserAlreadyExistsException ||
                 ex instanceof ItemAlreadyExistsException ||
-                ex instanceof MeasuringUnitAlreadyExistsException) {
+                ex instanceof MeasuringUnitAlreadyExistsException ||
+                ex instanceof MarketListItemAlreadyExistsException
+        ) {
             return HttpStatus.CONFLICT;
         } else {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
     }
-
 }
