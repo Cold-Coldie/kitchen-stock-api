@@ -59,7 +59,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .collect(Collectors.toList());
 
 
-        ErrorResponse response = new ErrorResponse("" + status.value(), "Bad Request", errors);
+        ErrorResponse response = new ErrorResponse(String.valueOf(status.value()), HttpStatus.BAD_REQUEST.getReasonPhrase(), errors);
         return new ResponseEntity<>(response, status);
     }
 
