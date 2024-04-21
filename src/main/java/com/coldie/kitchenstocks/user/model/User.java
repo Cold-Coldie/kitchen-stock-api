@@ -2,6 +2,8 @@ package com.coldie.kitchenstocks.user.model;
 
 import com.coldie.kitchenstocks.item.model.Item;
 import com.coldie.kitchenstocks.measuringUnit.model.MeasuringUnit;
+import com.coldie.kitchenstocks.token.model.Token;
+import com.coldie.kitchenstocks.user.role.Role;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -11,13 +13,17 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "USERS")
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
@@ -44,6 +50,7 @@ public class User {
     private String email;
 
     @Column(name = "password")
+    @JsonIgnore
     private String password;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -54,11 +61,19 @@ public class User {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    @OneToMany(mappedBy = "user")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @JsonIgnore
+    private List<Token> tokenList;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     @JsonIgnore
     public List<Item> itemList;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     @JsonIgnore
     public List<MeasuringUnit> measuringUnitList;
 
@@ -72,6 +87,8 @@ public class User {
             String password,
             Date createdAt,
             Date updatedAt,
+            Role role,
+            List<Token> tokenList,
             List<Item> itemList,
             List<MeasuringUnit> measuringUnitList
     ) {
@@ -84,6 +101,8 @@ public class User {
         this.password = password;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.role = role;
+        this.tokenList = tokenList;
         this.itemList = itemList;
         this.measuringUnitList = measuringUnitList;
     }
@@ -139,6 +158,7 @@ public class User {
         this.email = email;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -163,6 +183,22 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public List<Token> getTokenList() {
+        return tokenList;
+    }
+
+    public void setTokenList(List<Token> tokenList) {
+        this.tokenList = tokenList;
+    }
+
     public List<Item> getItemList() {
         return itemList;
     }
@@ -177,6 +213,36 @@ public class User {
 
     public void setMeasuringUnitList(List<MeasuringUnit> measuringUnitList) {
         this.measuringUnitList = measuringUnitList;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     @Override

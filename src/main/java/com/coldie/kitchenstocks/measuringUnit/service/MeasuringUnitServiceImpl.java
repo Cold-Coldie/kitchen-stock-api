@@ -1,10 +1,17 @@
 package com.coldie.kitchenstocks.measuringUnit.service;
 
-import com.coldie.kitchenstocks.exception.MeasuringUnitAlreadyExistsException;
-import com.coldie.kitchenstocks.exception.MeasuringUnitNotFoundException;
+import com.coldie.kitchenstocks.config.SecurityUtils;
+import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
+import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitAlreadyExistsException;
+import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitNotFoundException;
 import com.coldie.kitchenstocks.measuringUnit.model.MeasuringUnit;
 import com.coldie.kitchenstocks.measuringUnit.repository.MeasuringUnitRepository;
+import com.coldie.kitchenstocks.user.exception.UserNotFoundException;
+import com.coldie.kitchenstocks.user.model.User;
+import com.coldie.kitchenstocks.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,25 +23,43 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
     @Autowired
     private MeasuringUnitRepository measuringUnitRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Override
-    public List<MeasuringUnit> getAllMeasuringUnitsByUserId(Long userId) {
-        return measuringUnitRepository.findByUserId(userId);
-    }
+    public List<MeasuringUnit> getAllMeasuringUnits() {
+        try {
+            UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
+            if (userDetails == null) throw new UserNotFoundException("User with this email does not exist.");
 
-    @Override
-    public MeasuringUnit getMeasuringUnitByIdAndUserId(Long measuringUnitId, Long userId) {
-        return measuringUnitRepository.findByIdAndUserId(measuringUnitId, userId).orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with id: " + measuringUnitId + " not found."));
+            return measuringUnitRepository.findAllByUserEmailEquals(userDetails.getUsername());
+        } catch (UnexpectedErrorException exception) {
+            throw new UnexpectedErrorException("An unexpected error occurred.");
+        }
     }
 
     @Override
     public MeasuringUnit createMeasuringUnit(MeasuringUnit measuringUnit) {
-        Optional<MeasuringUnit> optionalMeasuringUnit = measuringUnitRepository.findByNameEqualsAndUserId(measuringUnit.getName(), measuringUnit.getUser().getId());
+        try {
+            UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
+            if (userDetails == null) throw new UserNotFoundException("User with this email does not exist.");
 
-        if (optionalMeasuringUnit.isPresent()) {
-            throw new MeasuringUnitAlreadyExistsException("Measuring Unit with the name: " + measuringUnit.getName() + " already exists.");
+            Optional<MeasuringUnit> optionalMeasuringUnit = measuringUnitRepository
+                    .findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), measuringUnit.getName());
+
+            if (optionalMeasuringUnit.isPresent()) throw new MeasuringUnitAlreadyExistsException("Measuring unit with the name: " + measuringUnit.getName() + " already exists.");
+
+
+            User user = userRepository.findByEmailEquals(userDetails.getUsername())
+                    .orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
+
+            measuringUnit.setUser(user);
+            measuringUnitRepository.save(measuringUnit);
+
+            return measuringUnit;
+        } catch (UnexpectedErrorException exception) {
+            throw new UnexpectedErrorException("An unexpected error occurred.");
         }
-
-        return measuringUnitRepository.save(measuringUnit);
     }
 }

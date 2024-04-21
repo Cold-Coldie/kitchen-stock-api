@@ -25,29 +25,11 @@ public class MeasuringUnitController {
 
     @GetMapping("")
     public ResponseEntity<List<MeasuringUnit>> getAllMeasuringUnits() {
-        try {
-            Long userId = 4L;
-
-            List<MeasuringUnit> measuringUnits = measuringUnitService.getAllMeasuringUnitsByUserId(userId);
-            return new ResponseEntity<List<MeasuringUnit>>(measuringUnits, HttpStatus.OK);
-        } catch (UnexpectedErrorException exception){
-            throw new UnexpectedErrorException("An unexpected error occurred.");
-        }
+        return new ResponseEntity<List<MeasuringUnit>>(measuringUnitService.getAllMeasuringUnits(), HttpStatus.OK);
     }
 
     @PostMapping("/create")
     public ResponseEntity<MeasuringUnit> createUser(@Valid @RequestBody MeasuringUnit measuringUnit) {
-        try {
-            Long userId = 4L;
-
-            User user = userService.getUserById(userId);
-
-            measuringUnit.setUser(user);
-
-            MeasuringUnit createdMeasuringUnit = measuringUnitService.createMeasuringUnit(measuringUnit);
-            return new ResponseEntity<MeasuringUnit>(createdMeasuringUnit, HttpStatus.CREATED);
-        } catch (UnexpectedErrorException exception) {
-            throw new UnexpectedErrorException("An unexpected error occurred.");
-        }
+        return new ResponseEntity<MeasuringUnit>(measuringUnitService.createMeasuringUnit(measuringUnit), HttpStatus.CREATED);
     }
 }
