@@ -1,5 +1,6 @@
 package com.coldie.kitchenstocks.exception;
 
+import com.coldie.kitchenstocks.config.exception.NotAuthenticatedException;
 import com.coldie.kitchenstocks.item.exception.ItemAlreadyExistsException;
 import com.coldie.kitchenstocks.item.exception.ItemNotFoundException;
 import com.coldie.kitchenstocks.marketlist.exception.MarketListItemAlreadyExistsException;
@@ -30,6 +31,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             ItemAlreadyExistsException.class,
             MeasuringUnitAlreadyExistsException.class,
             MarketListItemAlreadyExistsException.class,
+            NotAuthenticatedException.class,
             UnexpectedErrorException.class
     })
 
@@ -76,6 +78,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex instanceof MarketListItemAlreadyExistsException
         ) {
             return HttpStatus.CONFLICT;
+        } else if (ex instanceof NotAuthenticatedException) {
+            return HttpStatus.UNAUTHORIZED;
         } else {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }

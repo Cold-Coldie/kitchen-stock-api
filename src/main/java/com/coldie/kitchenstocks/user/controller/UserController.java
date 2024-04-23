@@ -22,4 +22,9 @@ public class UserController {
     public ResponseEntity<User> getUserProfile() {
         return new ResponseEntity<User>(userService.getUser(), HttpStatus.OK);
     }
+
+    @PutMapping("/profile")
+    public ResponseEntity<User> updateUserProfile(@RequestBody User user) {
+        return new ResponseEntity<User>(userService.updateUser(user), HttpStatus.OK);
+    }
 }

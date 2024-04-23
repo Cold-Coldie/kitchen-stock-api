@@ -68,7 +68,7 @@ public class JwtService {
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 // this operation (1000 * 60 * 24) indicates just one day.
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 48))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }

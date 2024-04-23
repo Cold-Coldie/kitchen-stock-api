@@ -28,7 +28,7 @@ public class MeasuringUnitController {
         return new ResponseEntity<List<MeasuringUnit>>(measuringUnitService.getAllMeasuringUnits(), HttpStatus.OK);
     }
 
-    @PostMapping("/create")
+    @PostMapping("")
     public ResponseEntity<MeasuringUnit> createUser(@Valid @RequestBody MeasuringUnit measuringUnit) {
         return new ResponseEntity<MeasuringUnit>(measuringUnitService.createMeasuringUnit(measuringUnit), HttpStatus.CREATED);
     }

@@ -1,6 +1,7 @@
 package com.coldie.kitchenstocks.measuringUnit.service;
 
 import com.coldie.kitchenstocks.config.SecurityUtils;
+import com.coldie.kitchenstocks.config.exception.NotAuthenticatedException;
 import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitAlreadyExistsException;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitNotFoundException;
@@ -31,7 +32,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
     public List<MeasuringUnit> getAllMeasuringUnits() {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
-            if (userDetails == null) throw new UserNotFoundException("User with this email does not exist.");
+            if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
             return measuringUnitRepository.findAllByUserEmailEquals(userDetails.getUsername());
         } catch (UnexpectedErrorException exception) {
@@ -43,7 +44,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
     public MeasuringUnit createMeasuringUnit(MeasuringUnit measuringUnit) {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
-            if (userDetails == null) throw new UserNotFoundException("User with this email does not exist.");
+            if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
             Optional<MeasuringUnit> optionalMeasuringUnit = measuringUnitRepository
                     .findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), measuringUnit.getName());
