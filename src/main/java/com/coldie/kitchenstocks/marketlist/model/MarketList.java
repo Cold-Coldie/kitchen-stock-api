@@ -64,18 +64,19 @@ public class MarketList {
     @JoinColumn(name = "measuring_unit_id")
     private MeasuringUnit measuringUnit;
 
-    public MarketList(Long id,
-                String name,
-                Integer quantity,
-                Integer lowLimit,
-                BigDecimal price,
-                String currencyName,
-                String currencySymbol,
-                Boolean needRestock,
-                Date createdAt,
-                Date updatedAt,
-                User user,
-                MeasuringUnit measuringUnit
+    public MarketList(
+            Long id,
+            String name,
+            Integer quantity,
+            Integer lowLimit,
+            BigDecimal price,
+            String currencyName,
+            String currencySymbol,
+            Boolean needRestock,
+            Date createdAt,
+            Date updatedAt,
+            User user,
+            MeasuringUnit measuringUnit
     ) {
         this.id = id;
         this.name = name;
@@ -87,6 +88,28 @@ public class MarketList {
         this.needRestock = needRestock;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.user = user;
+        this.measuringUnit = measuringUnit;
+    }
+
+    public MarketList(
+            String name,
+            Integer quantity,
+            Integer lowLimit,
+            BigDecimal price,
+            String currencyName,
+            String currencySymbol,
+            Boolean needRestock,
+            User user,
+            MeasuringUnit measuringUnit
+    ) {
+        this.name = name;
+        this.quantity = quantity;
+        this.lowLimit = lowLimit;
+        this.price = price;
+        this.currencyName = currencyName;
+        this.currencySymbol = currencySymbol;
+        this.needRestock = needRestock;
         this.user = user;
         this.measuringUnit = measuringUnit;
     }
