@@ -44,28 +44,32 @@ public class UserServiceImpl implements UserService {
             User savedUser = userRepository.findByEmailEquals(userDetails.getUsername())
                     .orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
 
-            if (Objects.nonNull(user.getFirstName())) {
-                savedUser.setFirstName(user.getFirstName());
-            }
-            if (Objects.nonNull(user.getLastName())) {
-                savedUser.setLastName(user.getLastName());
-            }
-            if (Objects.nonNull(user.getCountry())) {
-                savedUser.setCountry(user.getCountry());
-            }
-            if (Objects.nonNull(user.getCurrency())) {
-                savedUser.setCurrency(user.getCurrency());
-            }
-            if (Objects.nonNull(user.getEmail())) {
-                savedUser.setEmail(user.getEmail());
-            }
-            if (Objects.nonNull(user.getPassword())) {
-                savedUser.setPassword(user.getPassword());
-            }
+            getUserToUpdate(savedUser, user);
 
             return userRepository.save(savedUser);
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
+        }
+    }
+
+    private void getUserToUpdate(User savedUser, User user) {
+        if (Objects.nonNull(user.getFirstName())) {
+            savedUser.setFirstName(user.getFirstName());
+        }
+        if (Objects.nonNull(user.getLastName())) {
+            savedUser.setLastName(user.getLastName());
+        }
+        if (Objects.nonNull(user.getCountry())) {
+            savedUser.setCountry(user.getCountry());
+        }
+        if (Objects.nonNull(user.getCurrency())) {
+            savedUser.setCurrency(user.getCurrency());
+        }
+        if (Objects.nonNull(user.getEmail())) {
+            savedUser.setEmail(user.getEmail());
+        }
+        if (Objects.nonNull(user.getPassword())) {
+            savedUser.setPassword(user.getPassword());
         }
     }
 }

@@ -87,12 +87,10 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            Optional<Item> optionalItem = itemRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName());
-
-            if (optionalItem.isPresent()) {
-                throw new ItemAlreadyExistsException("Item with the name: " + itemRequest.getName() + " already exists.");
-
-            }
+            itemRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName())
+                    .ifPresent(item -> {
+                        throw new ItemAlreadyExistsException("Item with the name: " + itemRequest.getName() + " already exists.");
+                    });
 
             User user = userRepository.findByEmailEquals(userDetails.getUsername()).orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
 
