@@ -34,18 +34,15 @@ public class MarketListServiceImpl implements MarketListService {
     private MeasuringUnitRepository measuringUnitRepository;
 
     @Override
-    public MarketList createMarketListItem(ItemRequest itemRequest, boolean needThrowException) {
+    public MarketList createMarketListItem(ItemRequest itemRequest) {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            Optional<MarketList> optionalMarketList = marketListRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName());
-
-            if (optionalMarketList.isPresent() && needThrowException) {
-                throw new MarketListItemAlreadyExistsException("Market list item with the name: " + itemRequest.getName() + " already exists.");
-            } else if (optionalMarketList.isPresent()) {
-                return null;
-            }
+            marketListRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName())
+                    .ifPresent(marketList -> {
+                        throw new MarketListItemAlreadyExistsException("Market list item with the name: " + itemRequest.getName() + " already exists.");
+                    });
 
             User user = userRepository.findByEmailEquals(userDetails.getUsername()).orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
 

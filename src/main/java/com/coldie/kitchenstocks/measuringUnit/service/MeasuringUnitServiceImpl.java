@@ -46,11 +46,11 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            Optional<MeasuringUnit> optionalMeasuringUnit = measuringUnitRepository
-                    .findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), measuringUnit.getName());
-
-            if (optionalMeasuringUnit.isPresent()) throw new MeasuringUnitAlreadyExistsException("Measuring unit with the name: " + measuringUnit.getName() + " already exists.");
-
+            measuringUnitRepository
+                    .findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), measuringUnit.getName())
+                    .ifPresent(measuringUnit1 -> {
+                        throw new MeasuringUnitAlreadyExistsException("Measuring unit with the name: " + measuringUnit.getName() + " already exists.");
+                    });
 
             User user = userRepository.findByEmailEquals(userDetails.getUsername())
                     .orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));

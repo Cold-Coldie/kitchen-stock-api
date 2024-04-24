@@ -14,7 +14,7 @@ public interface ItemService {
 
     Page<Item> getItemsByName(String name, Pageable pageable);
 
-    Page<Item> getItemById(Long id, Pageable pageable);
+    Item getItemById(Long id);
 
     Item createItem(ItemRequest itemRequest);
 

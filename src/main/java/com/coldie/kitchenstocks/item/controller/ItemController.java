@@ -3,8 +3,6 @@ package com.coldie.kitchenstocks.item.controller;
 import com.coldie.kitchenstocks.item.model.Item;
 import com.coldie.kitchenstocks.item.request.ItemRequest;
 import com.coldie.kitchenstocks.item.service.ItemService;
-import com.coldie.kitchenstocks.measuringUnit.service.MeasuringUnitService;
-import com.coldie.kitchenstocks.user.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,25 +22,21 @@ public class ItemController {
     @Autowired
     private ItemService itemService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private MeasuringUnitService measuringUnitService;
-
     @GetMapping("")
     public ResponseEntity<Page<Item>> getItems(
-            @RequestParam(value = "id", required = false) Long id,
             @RequestParam(value = "name", required = false) String name,
             @PageableDefault(page = 0, size = 10, sort = {"id"}, direction = Sort.Direction.ASC) Pageable pageable) {
 
-        if (id == null && name == null) {
-            return new ResponseEntity<Page<Item>>(itemService.getAllItems(pageable), HttpStatus.OK);
-        } else if (id != null && name == null) {
-            return new ResponseEntity<Page<Item>>(itemService.getItemById(id, pageable), HttpStatus.OK);
-        } else {
+        if (name != null) {
             return new ResponseEntity<Page<Item>>(itemService.getItemsByName(name, pageable), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<Page<Item>>(itemService.getAllItems(pageable), HttpStatus.OK);
         }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Item> getItemById(@PathVariable(value = "id") Long id) {
+        return new ResponseEntity<Item>(itemService.getItemById(id), HttpStatus.OK);
     }
 
     @PostMapping("")
