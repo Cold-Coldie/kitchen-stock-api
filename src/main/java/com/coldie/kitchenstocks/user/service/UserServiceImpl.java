@@ -3,18 +3,14 @@ package com.coldie.kitchenstocks.user.service;
 import com.coldie.kitchenstocks.config.SecurityUtils;
 import com.coldie.kitchenstocks.config.exception.NotAuthenticatedException;
 import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
-import com.coldie.kitchenstocks.user.exception.UserAlreadyExistsException;
 import com.coldie.kitchenstocks.user.exception.UserNotFoundException;
 import com.coldie.kitchenstocks.user.model.User;
 import com.coldie.kitchenstocks.user.repository.UserRepository;
-import io.micrometer.common.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -44,15 +40,33 @@ public class UserServiceImpl implements UserService {
             User savedUser = userRepository.findByEmailEquals(userDetails.getUsername())
                     .orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
 
-            getUserToUpdate(savedUser, user);
-
-            return userRepository.save(savedUser);
+            return userRepository.save(getUserToUpdate(savedUser, user));
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
     }
 
-    private void getUserToUpdate(User savedUser, User user) {
+    @Override
+    public String deleteUserById(Long id) {
+        try {
+            UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
+            if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
+
+            userRepository.findById(id)
+                    .ifPresentOrElse(
+                            user -> userRepository.deleteById(id),
+                            () -> {
+                                throw new UserNotFoundException("User with id: " + id + " does not exist.");
+                            }
+                    );
+
+            return "Deleted user with id: " + id;
+        } catch (UnexpectedErrorException exception) {
+            throw new UnexpectedErrorException("An unexpected error occurred.");
+        }
+    }
+
+    private User getUserToUpdate(User savedUser, User user) {
         if (Objects.nonNull(user.getFirstName())) {
             savedUser.setFirstName(user.getFirstName());
         }
@@ -71,5 +85,7 @@ public class UserServiceImpl implements UserService {
         if (Objects.nonNull(user.getPassword())) {
             savedUser.setPassword(user.getPassword());
         }
+
+        return savedUser;
     }
 }

@@ -21,7 +21,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             throws IOException, ServletException {
 
         ErrorResponse errorResponse;
-        if (authException instanceof AuthenticationException) {
+        if (authException != null) {
             errorResponse = new ErrorResponse(String.valueOf(HttpStatus.UNAUTHORIZED.value()),
                     HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                     Collections.singletonList("User not authenticated. Please re-authenticate."));

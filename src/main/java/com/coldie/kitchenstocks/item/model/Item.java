@@ -2,9 +2,7 @@ package com.coldie.kitchenstocks.item.model;
 
 import com.coldie.kitchenstocks.measuringUnit.model.MeasuringUnit;
 import com.coldie.kitchenstocks.user.model.User;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,9 +24,12 @@ public class Item {
     @NotNull(message = "name cannot be null")
     private String name;
 
-    @Column(name = "quantity")
-    @NotNull(message = "quantity cannot be null")
-    private Integer quantity;
+    @Column(name = "available_quantity")
+    @NotNull(message = "availableQuantity cannot be null")
+    private Integer availableQuantity;
+
+    @Column(name = "restock_quantity")
+    private Integer restockQuantity;
 
     @Column(name = "low_limit")
     @NotNull(message = "lowLimit cannot be null")
@@ -69,7 +70,8 @@ public class Item {
     public Item(
             Long id,
             String name,
-            Integer quantity,
+            Integer availableQuantity,
+            Integer restockQuantity,
             Integer lowLimit,
             BigDecimal price,
             String currencyName,
@@ -82,7 +84,8 @@ public class Item {
     ) {
         this.id = id;
         this.name = name;
-        this.quantity = quantity;
+        this.availableQuantity = availableQuantity;
+        this.restockQuantity = restockQuantity;
         this.lowLimit = lowLimit;
         this.price = price;
         this.currencyName = currencyName;
@@ -96,7 +99,8 @@ public class Item {
 
     public Item(
             String name,
-            Integer quantity,
+            Integer availableQuantity,
+            Integer restockQuantity,
             Integer lowLimit,
             BigDecimal price,
             String currencyName,
@@ -106,7 +110,8 @@ public class Item {
             MeasuringUnit measuringUnit
     ) {
         this.name = name;
-        this.quantity = quantity;
+        this.availableQuantity = availableQuantity;
+        this.restockQuantity = restockQuantity;
         this.lowLimit = lowLimit;
         this.price = price;
         this.currencyName = currencyName;
@@ -135,12 +140,20 @@ public class Item {
         this.name = name;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public Integer getAvailableQuantity() {
+        return availableQuantity;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setAvailableQuantity(Integer availableQuantity) {
+        this.availableQuantity = availableQuantity;
+    }
+
+    public Integer getRestockQuantity() {
+        return restockQuantity;
+    }
+
+    public void setRestockQuantity(Integer restockQuantity) {
+        this.restockQuantity = restockQuantity;
     }
 
     public Integer getLowLimit() {
@@ -220,7 +233,8 @@ public class Item {
         return "Item{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", quantity=" + quantity +
+                ", availableQuantity=" + availableQuantity +
+                ", restockQuantity=" + restockQuantity +
                 ", lowLimit=" + lowLimit +
                 ", price=" + price +
                 ", currencyName='" + currencyName + '\'' +

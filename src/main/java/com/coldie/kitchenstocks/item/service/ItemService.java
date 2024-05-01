@@ -5,8 +5,6 @@ import com.coldie.kitchenstocks.item.request.ItemRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
 
 public interface ItemService {
 
@@ -18,7 +16,7 @@ public interface ItemService {
 
     Item createItem(ItemRequest itemRequest);
 
-    Item updateItem(Item item);
+    Item updateItem(ItemRequest itemRequest);
 
-    String deleteItem(Long id);
+    String deleteItemById(Long id);
 }

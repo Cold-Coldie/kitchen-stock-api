@@ -7,6 +7,10 @@ import com.coldie.kitchenstocks.user.model.User;
 import com.coldie.kitchenstocks.user.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +28,34 @@ public class MeasuringUnitController {
     private UserService userService;
 
     @GetMapping("")
-    public ResponseEntity<List<MeasuringUnit>> getAllMeasuringUnits() {
-        return new ResponseEntity<List<MeasuringUnit>>(measuringUnitService.getAllMeasuringUnits(), HttpStatus.OK);
+    public ResponseEntity<Page<MeasuringUnit>> getAllMeasuringUnits(
+            @RequestParam(name = "name", required = false) String name,
+            @PageableDefault(page = 0, size = 10, sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        if (name != null) {
+            return new ResponseEntity<Page<MeasuringUnit>>(measuringUnitService.getMeasuringUnitsByName(name, pageable), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<Page<MeasuringUnit>>(measuringUnitService.getAllMeasuringUnits(pageable), HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MeasuringUnit> getMeasuringUnitById(@PathVariable("id") Long id) {
+        return new ResponseEntity<MeasuringUnit>(measuringUnitService.getMeasuringUnitById(id), HttpStatus.OK);
     }
 
     @PostMapping("")
-    public ResponseEntity<MeasuringUnit> createUser(@Valid @RequestBody MeasuringUnit measuringUnit) {
+    public ResponseEntity<MeasuringUnit> createMeasuringUnit(@Valid @RequestBody MeasuringUnit measuringUnit) {
         return new ResponseEntity<MeasuringUnit>(measuringUnitService.createMeasuringUnit(measuringUnit), HttpStatus.CREATED);
+    }
+
+    @PutMapping("")
+    public ResponseEntity<MeasuringUnit> updateMeasuringUnit(@RequestBody MeasuringUnit measuringUnit) {
+        return new ResponseEntity<MeasuringUnit>(measuringUnitService.updateMeasuringUnit(measuringUnit), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteMeasuringUnitById(@PathVariable("id") Long id) {
+        return new ResponseEntity<String>(measuringUnitService.deleteMeasuringUnitById(id), HttpStatus.OK);
     }
 }

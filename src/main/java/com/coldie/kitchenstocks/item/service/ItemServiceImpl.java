@@ -2,15 +2,13 @@ package com.coldie.kitchenstocks.item.service;
 
 import com.coldie.kitchenstocks.config.SecurityUtils;
 import com.coldie.kitchenstocks.config.exception.NotAuthenticatedException;
+import com.coldie.kitchenstocks.exception.InvalidRequest;
 import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
 import com.coldie.kitchenstocks.item.exception.ItemAlreadyExistsException;
 import com.coldie.kitchenstocks.item.exception.ItemNotFoundException;
 import com.coldie.kitchenstocks.item.model.Item;
 import com.coldie.kitchenstocks.item.request.ItemRequest;
 import com.coldie.kitchenstocks.item.respository.ItemRepository;
-import com.coldie.kitchenstocks.marketlist.model.MarketList;
-import com.coldie.kitchenstocks.marketlist.repository.MarketListRepository;
-import com.coldie.kitchenstocks.marketlist.service.MarketListService;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitNotFoundException;
 import com.coldie.kitchenstocks.measuringUnit.model.MeasuringUnit;
 import com.coldie.kitchenstocks.measuringUnit.repository.MeasuringUnitRepository;
@@ -24,7 +22,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class ItemServiceImpl implements ItemService {
@@ -37,12 +34,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private MeasuringUnitRepository measuringUnitRepository;
-
-    @Autowired
-    private MarketListService marketListService;
-
-    @Autowired
-    private MarketListRepository marketListRepository;
 
     @Override
     public Page<Item> getAllItems(Pageable pageable) {
@@ -74,7 +65,7 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return itemRepository.findAllByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
+            return itemRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
                     .orElseThrow(() -> new ItemNotFoundException("Item with id: " + id + " not found."));
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
@@ -97,75 +88,46 @@ public class ItemServiceImpl implements ItemService {
             MeasuringUnit measuringUnit = measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
                     .orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with this id: " + itemRequest.getMeasuringUnitId() + " does not exist."));
 
-            Item savedItem = itemRepository.save(getItemToSave(user, measuringUnit, itemRequest));
-
-            if (itemRequest.getQuantity() <= itemRequest.getLowLimit()) {
-                marketListService.createMarketListItem(itemRequest);
-            }
-
-            return savedItem;
+            return itemRepository.save(getItemToSave(user, measuringUnit, itemRequest));
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
     }
 
     @Override
-    public Item updateItem(Item item) {
+    public Item updateItem(ItemRequest itemRequest) {
         UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
         if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-        if (item.getId() == null)
-            throw new ItemNotFoundException("Please provide the \"id\" of the item in your request.");
+        if (itemRequest.getId() == null)
+            throw new InvalidRequest("Please provide the \"id\" of the item in your request.");
 
-        Item savedItem = itemRepository.findAllByUserEmailEqualsAndIdEquals(userDetails.getUsername(), item.getId())
-                .orElseThrow(() -> new ItemNotFoundException("Item with id: " + item.getId() + " not found."));
+        Item savedItem = itemRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getId())
+                .orElseThrow(() -> new ItemNotFoundException("Item with id: " + itemRequest.getId() + " not found."));
 
-        Optional<MarketList> optionalMarketList = marketListRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), savedItem.getName());
+        if (!Objects.equals(savedItem.getMeasuringUnit().getId(), itemRequest.getMeasuringUnitId())) {
+            MeasuringUnit measuringUnit = measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
+                    .orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with id: " + itemRequest.getMeasuringUnitId() + " not found."));
 
-        if (
-                (
-                        Objects.nonNull(item.getName()) ||
-                                Objects.nonNull(item.getQuantity()) ||
-                                Objects.nonNull(item.getLowLimit()) ||
-                                Objects.nonNull(item.getPrice()) ||
-                                Objects.nonNull(item.getCurrencyName()) ||
-                                Objects.nonNull(item.getCurrencySymbol()) ||
-                                Objects.nonNull(item.getNeedRestock())
-                ) && optionalMarketList.isPresent()
-        ) {
-            MarketList marketListWithSameItemName = optionalMarketList.get();
-
-            getMarketListToUpdate(savedItem, item, marketListWithSameItemName);
-
-            if (!marketListWithSameItemName.getNeedRestock()) {
-                marketListRepository.deleteById(marketListWithSameItemName.getId());
-            } else {
-                marketListRepository.save(marketListWithSameItemName);
-            }
+            savedItem.setMeasuringUnit(measuringUnit);
         }
 
-        Item updatedItem = itemRepository.save(getItemToUpdate(savedItem, item));
-
-        if (updatedItem.getNeedRestock() && optionalMarketList.isEmpty()) {
-            marketListService.createMarketListItem(convertedItemRequestFromItem(updatedItem));
-        }
-
-        return updatedItem;
+        return itemRepository.save(getItemToUpdate(savedItem, itemRequest));
     }
 
     @Override
-    public String deleteItem(Long id) {
+    public String deleteItemById(Long id) {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            Item itemToDelete = itemRepository.findAllByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
-                    .orElseThrow(() -> new ItemNotFoundException("Item with id: " + id + " not found."));
+            itemRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
+                    .ifPresentOrElse(item -> itemRepository.deleteById(item.getId()),
+                            () -> {
+                                throw new ItemNotFoundException("Item with the id: " + id + " not found.");
+                            }
+                    );
 
-            marketListRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemToDelete.getName())
-                    .ifPresent(marketList -> marketListRepository.deleteById(marketList.getId()));
-
-            itemRepository.deleteById(id);
             return "Deleted item with id: " + id;
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
@@ -175,77 +137,46 @@ public class ItemServiceImpl implements ItemService {
     public static Item getItemToSave(User user, MeasuringUnit measuringUnit, ItemRequest itemRequest) {
         return new Item(
                 itemRequest.getName(),
-                itemRequest.getQuantity(),
+                itemRequest.getAvailableQuantity(),
+                1,
                 itemRequest.getLowLimit(),
                 itemRequest.getPrice(),
                 itemRequest.getCurrencyName(),
                 itemRequest.getCurrencySymbol(),
-                itemRequest.getQuantity() <= itemRequest.getLowLimit(),
+                itemRequest.getAvailableQuantity() <= itemRequest.getLowLimit(),
                 user,
                 measuringUnit
         );
     }
 
-    public static Item getItemToUpdate(Item savedItem, Item item) {
-        if (Objects.nonNull(item.getName())) {
-            savedItem.setName(item.getName());
+    public static Item getItemToUpdate(Item savedItem, ItemRequest itemRequest) {
+        if (Objects.nonNull(itemRequest.getName())) {
+            savedItem.setName(itemRequest.getName());
         }
-        if (Objects.nonNull(item.getQuantity())) {
-            savedItem.setQuantity(item.getQuantity());
+        if (Objects.nonNull(itemRequest.getAvailableQuantity())) {
+            savedItem.setAvailableQuantity(itemRequest.getAvailableQuantity());
         }
-        if (Objects.nonNull(item.getLowLimit())) {
-            savedItem.setLowLimit(item.getLowLimit());
+        if (Objects.nonNull(itemRequest.getRestockQuantity())) {
+            savedItem.setRestockQuantity(itemRequest.getRestockQuantity());
         }
-        if (Objects.nonNull(item.getPrice())) {
-            savedItem.setPrice(item.getPrice());
+        if (Objects.nonNull(itemRequest.getLowLimit())) {
+            savedItem.setLowLimit(itemRequest.getLowLimit());
         }
-        if (Objects.nonNull(item.getCurrencyName())) {
-            savedItem.setCurrencyName(item.getCurrencyName());
+        if (Objects.nonNull(itemRequest.getPrice())) {
+            savedItem.setPrice(itemRequest.getPrice());
         }
-        if (Objects.nonNull(item.getCurrencySymbol())) {
-            savedItem.setCurrencySymbol(item.getCurrencySymbol());
+        if (Objects.nonNull(itemRequest.getCurrencyName())) {
+            savedItem.setCurrencyName(itemRequest.getCurrencyName());
         }
-        if (Objects.nonNull(item.getNeedRestock())) {
-            savedItem.setNeedRestock(item.getNeedRestock());
+        if (Objects.nonNull(itemRequest.getCurrencySymbol())) {
+            savedItem.setCurrencySymbol(itemRequest.getCurrencySymbol());
+        }
+        if (Objects.nonNull(itemRequest.getNeedRestock())) {
+            savedItem.setNeedRestock(itemRequest.getNeedRestock());
         } else {
-            savedItem.setNeedRestock(savedItem.getQuantity() <= savedItem.getLowLimit());
+            savedItem.setNeedRestock(savedItem.getAvailableQuantity() <= savedItem.getLowLimit());
         }
 
         return savedItem;
-    }
-
-    public static void getMarketListToUpdate(Item savedItem, Item item, MarketList marketListWithSameItemName) {
-        if (Objects.nonNull(item.getName())) {
-            marketListWithSameItemName.setName(item.getName());
-        }
-        if (Objects.nonNull(item.getLowLimit())) {
-            marketListWithSameItemName.setLowLimit(item.getLowLimit());
-        }
-        if (Objects.nonNull(item.getPrice())) {
-            marketListWithSameItemName.setPrice(item.getPrice());
-        }
-        if (Objects.nonNull(item.getCurrencyName())) {
-            marketListWithSameItemName.setCurrencyName(item.getCurrencyName());
-        }
-        if (Objects.nonNull(item.getCurrencySymbol())) {
-            marketListWithSameItemName.setCurrencySymbol(item.getCurrencySymbol());
-        }
-        if (Objects.nonNull(item.getNeedRestock())) {
-            marketListWithSameItemName.setNeedRestock(item.getNeedRestock());
-        } else {
-            marketListWithSameItemName.setNeedRestock(savedItem.getQuantity() <= marketListWithSameItemName.getLowLimit());
-        }
-    }
-
-    private ItemRequest convertedItemRequestFromItem(Item item) {
-        return new ItemRequest(
-                item.getName(),
-                item.getQuantity(),
-                item.getLowLimit(),
-                item.getPrice(),
-                item.getCurrencyName(),
-                item.getCurrencySymbol(),
-                item.getMeasuringUnit().getId()
-        );
     }
 }

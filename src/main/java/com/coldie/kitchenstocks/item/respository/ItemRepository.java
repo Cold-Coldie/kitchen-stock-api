@@ -13,7 +13,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     Page<Item> findAllByUserEmailEquals(String email, Pageable pageable);
 
-    Optional<Item> findAllByUserEmailEqualsAndIdEquals(String email, Long id);
+    Optional<Item> findByUserEmailEqualsAndIdEquals(String email, Long id);
 
     Page<Item> findAllByUserEmailEqualsAndNameContaining(String email, String name, Pageable pageable);
 
