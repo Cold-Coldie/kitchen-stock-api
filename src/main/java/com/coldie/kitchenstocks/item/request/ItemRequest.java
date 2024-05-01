@@ -1,42 +1,68 @@
 package com.coldie.kitchenstocks.item.request;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 
 public class ItemRequest {
 
+    private Long id;
+
+    @NotNull(message = "name cannot be null")
     private String name;
 
-    private Integer quantity;
+    @NotNull(message = "availableQuantity cannot be null")
+    private Integer availableQuantity;
 
+    private Integer restockQuantity;
+
+    @NotNull(message = "lowLimit cannot be null")
     private Integer lowLimit;
 
+    @NotNull(message = "price cannot be null")
     private BigDecimal price;
 
+    @NotNull(message = "currencyName cannot be null")
     private String currencyName;
 
+    @NotNull(message = "currencySymbol cannot be null")
     private String currencySymbol;
+
+    private Boolean needRestock;
 
     private Long measuringUnitId;
 
     public ItemRequest(
             String name,
-            Integer quantity,
+            Integer availableQuantity,
+            Integer restockQuantity,
             Integer lowLimit,
             BigDecimal price,
             String currencyName,
             String currencySymbol,
+            Boolean needRestock,
             Long measuringUnitId
     ) {
         this.name = name;
-        this.quantity = quantity;
+        this.availableQuantity = availableQuantity;
+        this.restockQuantity = restockQuantity;
         this.lowLimit = lowLimit;
         this.price = price;
         this.currencyName = currencyName;
         this.currencySymbol = currencySymbol;
+        this.needRestock = needRestock;
         this.measuringUnitId = measuringUnitId;
     }
 
     public ItemRequest() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -47,12 +73,20 @@ public class ItemRequest {
         this.name = name;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public Integer getAvailableQuantity() {
+        return availableQuantity;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setAvailableQuantity(Integer availableQuantity) {
+        this.availableQuantity = availableQuantity;
+    }
+
+    public Integer getRestockQuantity() {
+        return restockQuantity;
+    }
+
+    public void setRestockQuantity(Integer restockQuantity) {
+        this.restockQuantity = restockQuantity;
     }
 
     public Integer getLowLimit() {
@@ -85,6 +119,14 @@ public class ItemRequest {
 
     public void setCurrencySymbol(String currencySymbol) {
         this.currencySymbol = currencySymbol;
+    }
+
+    public Boolean getNeedRestock() {
+        return needRestock;
+    }
+
+    public void setNeedRestock(Boolean needRestock) {
+        this.needRestock = needRestock;
     }
 
     public Long getMeasuringUnitId() {

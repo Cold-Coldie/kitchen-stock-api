@@ -3,8 +3,6 @@ package com.coldie.kitchenstocks.exception;
 import com.coldie.kitchenstocks.config.exception.NotAuthenticatedException;
 import com.coldie.kitchenstocks.item.exception.ItemAlreadyExistsException;
 import com.coldie.kitchenstocks.item.exception.ItemNotFoundException;
-import com.coldie.kitchenstocks.marketlist.exception.MarketListItemAlreadyExistsException;
-import com.coldie.kitchenstocks.marketlist.exception.MarketListItemNotFoundException;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitAlreadyExistsException;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitNotFoundException;
 import com.coldie.kitchenstocks.user.exception.UserAlreadyExistsException;
@@ -26,12 +24,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             UserNotFoundException.class,
             ItemNotFoundException.class,
             MeasuringUnitNotFoundException.class,
-            MarketListItemNotFoundException.class,
             UserAlreadyExistsException.class,
             ItemAlreadyExistsException.class,
             MeasuringUnitAlreadyExistsException.class,
-            MarketListItemAlreadyExistsException.class,
             NotAuthenticatedException.class,
+            InvalidRequest.class,
             UnexpectedErrorException.class
     })
 
@@ -68,18 +65,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private HttpStatus getStatus(Exception ex) {
         if (ex instanceof UserNotFoundException ||
                 ex instanceof ItemNotFoundException ||
-                ex instanceof MeasuringUnitNotFoundException ||
-                ex instanceof MarketListItemNotFoundException
+                ex instanceof MeasuringUnitNotFoundException
         ) {
             return HttpStatus.NOT_FOUND;
         } else if (ex instanceof UserAlreadyExistsException ||
                 ex instanceof ItemAlreadyExistsException ||
-                ex instanceof MeasuringUnitAlreadyExistsException ||
-                ex instanceof MarketListItemAlreadyExistsException
+                ex instanceof MeasuringUnitAlreadyExistsException
         ) {
             return HttpStatus.CONFLICT;
         } else if (ex instanceof NotAuthenticatedException) {
             return HttpStatus.UNAUTHORIZED;
+        } else if (ex instanceof  InvalidRequest) {
+            return HttpStatus.BAD_REQUEST;
         } else {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }

@@ -13,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("api/v1/item")
 public class ItemController {
@@ -24,9 +22,9 @@ public class ItemController {
 
     @GetMapping("")
     public ResponseEntity<Page<Item>> getItems(
-            @RequestParam(value = "name", required = false) String name,
-            @PageableDefault(page = 0, size = 10, sort = {"id"}, direction = Sort.Direction.ASC) Pageable pageable) {
-
+            @RequestParam(name = "name", required = false) String name,
+            @PageableDefault(page = 0, size = 10, sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         if (name != null) {
             return new ResponseEntity<Page<Item>>(itemService.getItemsByName(name, pageable), HttpStatus.OK);
         } else {
@@ -45,12 +43,12 @@ public class ItemController {
     }
 
     @PutMapping("")
-    public ResponseEntity<Item> updateItem(@RequestBody Item item) {
-        return new ResponseEntity<Item>(itemService.updateItem(item), HttpStatus.OK);
+    public ResponseEntity<Item> updateItem(@RequestBody ItemRequest itemRequest) {
+        return new ResponseEntity<Item>(itemService.updateItem(itemRequest), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> createItem(@PathVariable("id") Long id) {
-        return new ResponseEntity<String>(itemService.deleteItem(id), HttpStatus.OK);
+    public ResponseEntity<String> deleteItemById(@PathVariable("id") Long id) {
+        return new ResponseEntity<String>(itemService.deleteItemById(id), HttpStatus.OK);
     }
 }

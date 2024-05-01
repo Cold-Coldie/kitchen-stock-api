@@ -6,4 +6,6 @@ public interface UserService {
     User getUser();
 
     User updateUser(User user);
+
+    String deleteUserById(Long id);
 }
