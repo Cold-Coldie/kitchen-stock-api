@@ -12,11 +12,11 @@ import java.util.Optional;
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    Page<Item> findAllByUser_EmailEquals(String email, Pageable pageable);
-
     Optional<Item> findByUser_EmailEqualsAndIdEquals(String email, Long id);
 
     Page<Item> findAllByUser_EmailEqualsAndNameContaining(String email, String name, Pageable pageable);
+
+    Page<Item> findAllByUser_EmailEqualsAndNameContainingAndMeasuringUnit_IdEquals(String email, String name, Long measuringId, Pageable pageable);
 
     Optional<Item> findByUser_EmailEqualsAndNameEquals(String email, String name);
 

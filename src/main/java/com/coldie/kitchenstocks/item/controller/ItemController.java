@@ -22,14 +22,11 @@ public class ItemController {
 
     @GetMapping("")
     public ResponseEntity<Page<Item>> getItems(
-            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "name", required = false, defaultValue = "") String name,
+            @RequestParam(name = "measuringId", required = false, defaultValue = "") Long measuringId,
             @PageableDefault(page = 0, size = 10, sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        if (name != null) {
-            return new ResponseEntity<Page<Item>>(itemService.getItemsByName(name, pageable), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<Page<Item>>(itemService.getAllItems(pageable), HttpStatus.OK);
-        }
+        return new ResponseEntity<Page<Item>>(itemService.getItemsByNameAndMeasuringId(name, measuringId, pageable), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
