@@ -41,7 +41,7 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return itemRepository.findAllByUserEmailEquals(userDetails.getUsername(), pageable);
+            return itemRepository.findAllByUser_EmailEquals(userDetails.getUsername(), pageable);
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
@@ -53,7 +53,7 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return itemRepository.findAllByUserEmailEqualsAndNameContaining(userDetails.getUsername(), name, pageable);
+            return itemRepository.findAllByUser_EmailEqualsAndNameContaining(userDetails.getUsername(), name, pageable);
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
@@ -65,7 +65,7 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return itemRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
+            return itemRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), id)
                     .orElseThrow(() -> new ItemNotFoundException("Item with id: " + id + " not found."));
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
@@ -78,14 +78,14 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            itemRepository.findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName())
+            itemRepository.findByUser_EmailEqualsAndNameEquals(userDetails.getUsername(), itemRequest.getName())
                     .ifPresent(item -> {
                         throw new ItemAlreadyExistsException("Item with the name: " + itemRequest.getName() + " already exists.");
                     });
 
             User user = userRepository.findByEmailEquals(userDetails.getUsername()).orElseThrow(() -> new UserNotFoundException("User with this email does not exist."));
 
-            MeasuringUnit measuringUnit = measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
+            MeasuringUnit measuringUnit = measuringUnitRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
                     .orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with this id: " + itemRequest.getMeasuringUnitId() + " does not exist."));
 
             return itemRepository.save(getItemToSave(user, measuringUnit, itemRequest));
@@ -102,11 +102,11 @@ public class ItemServiceImpl implements ItemService {
         if (itemRequest.getId() == null)
             throw new InvalidRequest("Please provide the \"id\" of the item in your request.");
 
-        Item savedItem = itemRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getId())
+        Item savedItem = itemRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getId())
                 .orElseThrow(() -> new ItemNotFoundException("Item with id: " + itemRequest.getId() + " not found."));
 
         if (!Objects.equals(savedItem.getMeasuringUnit().getId(), itemRequest.getMeasuringUnitId())) {
-            MeasuringUnit measuringUnit = measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
+            MeasuringUnit measuringUnit = measuringUnitRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), itemRequest.getMeasuringUnitId())
                     .orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with id: " + itemRequest.getMeasuringUnitId() + " not found."));
 
             savedItem.setMeasuringUnit(measuringUnit);
@@ -121,7 +121,7 @@ public class ItemServiceImpl implements ItemService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            itemRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
+            itemRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), id)
                     .ifPresentOrElse(item -> itemRepository.deleteById(item.getId()),
                             () -> {
                                 throw new ItemNotFoundException("Item with the id: " + id + " not found.");
@@ -134,7 +134,7 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    public static Item getItemToSave(User user, MeasuringUnit measuringUnit, ItemRequest itemRequest) {
+    private static Item getItemToSave(User user, MeasuringUnit measuringUnit, ItemRequest itemRequest) {
         return new Item(
                 itemRequest.getName(),
                 itemRequest.getAvailableQuantity(),
@@ -149,7 +149,7 @@ public class ItemServiceImpl implements ItemService {
         );
     }
 
-    public static Item getItemToUpdate(Item savedItem, ItemRequest itemRequest) {
+    private static Item getItemToUpdate(Item savedItem, ItemRequest itemRequest) {
         if (Objects.nonNull(itemRequest.getName())) {
             savedItem.setName(itemRequest.getName());
         }

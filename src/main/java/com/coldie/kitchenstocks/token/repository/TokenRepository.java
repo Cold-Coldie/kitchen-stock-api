@@ -13,6 +13,6 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
     @Query(""" 
             SELECT t from Token t INNER JOIN User u on t.user.id = u.id WHERE u.id = :userId AND (t.expired = false or t.revoked = false)
             """)
-        // List<Token> findAllByUserIdAndExpiredFalseAndRevokedFalse(Long userId);
+        // List<Token> findAllByUser_IdAndExpiredFalseAndRevokedFalse(Long userId);
     List<Token> findAllValidTokensByUser(Long userId);
 }

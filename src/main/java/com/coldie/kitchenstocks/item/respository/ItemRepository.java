@@ -6,16 +6,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    Page<Item> findAllByUserEmailEquals(String email, Pageable pageable);
+    Page<Item> findAllByUser_EmailEquals(String email, Pageable pageable);
 
-    Optional<Item> findByUserEmailEqualsAndIdEquals(String email, Long id);
+    Optional<Item> findByUser_EmailEqualsAndIdEquals(String email, Long id);
 
-    Page<Item> findAllByUserEmailEqualsAndNameContaining(String email, String name, Pageable pageable);
+    Page<Item> findAllByUser_EmailEqualsAndNameContaining(String email, String name, Pageable pageable);
 
-    Optional<Item> findByUserEmailEqualsAndNameEquals(String email, String name);
+    Optional<Item> findByUser_EmailEqualsAndNameEquals(String email, String name);
+
+    List<Item> findAllByUser_EmailEqualsAndMeasuringUnit_IdEquals(String email, Long id);
+
+    void deleteAllByUser_EmailEqualsAndMeasuringUnit_IdEquals(String email, Long id);
 }
