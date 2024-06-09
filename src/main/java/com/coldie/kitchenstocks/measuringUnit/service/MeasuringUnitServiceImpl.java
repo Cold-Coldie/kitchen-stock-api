@@ -4,6 +4,8 @@ import com.coldie.kitchenstocks.config.SecurityUtils;
 import com.coldie.kitchenstocks.config.exception.NotAuthenticatedException;
 import com.coldie.kitchenstocks.exception.InvalidRequest;
 import com.coldie.kitchenstocks.exception.UnexpectedErrorException;
+import com.coldie.kitchenstocks.item.model.Item;
+import com.coldie.kitchenstocks.item.respository.ItemRepository;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitAlreadyExistsException;
 import com.coldie.kitchenstocks.measuringUnit.exception.MeasuringUnitNotFoundException;
 import com.coldie.kitchenstocks.measuringUnit.model.MeasuringUnit;
@@ -16,8 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class MeasuringUnitServiceImpl implements MeasuringUnitService {
@@ -28,6 +33,9 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ItemRepository itemRepository;
+
 
     @Override
     public Page<MeasuringUnit> getAllMeasuringUnits(Pageable pageable) {
@@ -35,7 +43,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return measuringUnitRepository.findAllByUserEmailEquals(userDetails.getUsername(), pageable);
+            return measuringUnitRepository.findAllByUser_EmailEquals(userDetails.getUsername(), pageable);
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
@@ -47,7 +55,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return measuringUnitRepository.findAllByUserEmailEqualsAndNameContaining(userDetails.getUsername(), name, pageable);
+            return measuringUnitRepository.findAllByUser_EmailEqualsAndNameContaining(userDetails.getUsername(), name, pageable);
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
@@ -59,7 +67,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
+            return measuringUnitRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), id)
                     .orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with id: " + id + " not found."));
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
@@ -73,7 +81,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
             measuringUnitRepository
-                    .findByUserEmailEqualsAndNameEquals(userDetails.getUsername(), measuringUnit.getName())
+                    .findByUser_EmailEqualsAndNameEquals(userDetails.getUsername(), measuringUnit.getName())
                     .ifPresent(measuringUnit1 -> {
                         throw new MeasuringUnitAlreadyExistsException("Measuring unit with the name: " + measuringUnit.getName() + " already exists.");
                     });
@@ -99,7 +107,7 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
             if (measuringUnit.getId() == null)
                 throw new InvalidRequest("Please provide the \"id\" of the item in your request.");
 
-            MeasuringUnit savedMeasuringUnit = measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), measuringUnit.getId())
+            MeasuringUnit savedMeasuringUnit = measuringUnitRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), measuringUnit.getId())
                     .orElseThrow(() -> new MeasuringUnitNotFoundException("Measuring unit with id: " + measuringUnit.getId() + " not found."));
 
             if (Objects.nonNull(measuringUnit.getName())) {
@@ -113,13 +121,14 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
     }
 
     @Override
+    @Transactional
     public String deleteMeasuringUnitById(Long id) {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            measuringUnitRepository.findByUserEmailEqualsAndIdEquals(userDetails.getUsername(), id)
-                    .ifPresentOrElse(measuringUnit -> measuringUnitRepository.deleteById(measuringUnit.getId()),
+            measuringUnitRepository.findByUser_EmailEqualsAndIdEquals(userDetails.getUsername(), id)
+                    .ifPresentOrElse(measuringUnit -> safelyDeleteMeasuringUnitById(measuringUnit.getId(), itemRepository, measuringUnitRepository, userDetails.getUsername()),
                             () -> {
                                 throw new MeasuringUnitNotFoundException("Measuring unit with id: " + id + " not found.");
                             }
@@ -129,5 +138,15 @@ public class MeasuringUnitServiceImpl implements MeasuringUnitService {
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }
+    }
+
+    private static void safelyDeleteMeasuringUnitById(Long measuringUnitId, ItemRepository itemRepository, MeasuringUnitRepository measuringUnitRepository, String email) {
+        List<Item> items = itemRepository.findAllByUser_EmailEqualsAndMeasuringUnit_IdEquals(email, measuringUnitId);
+
+        if (!items.isEmpty()) {
+            itemRepository.deleteAllByUser_EmailEqualsAndMeasuringUnit_IdEquals(email, measuringUnitId);
+        }
+
+        measuringUnitRepository.deleteById(measuringUnitId);
     }
 }

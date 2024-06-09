@@ -12,11 +12,11 @@ import java.util.Optional;
 @Repository
 public interface MeasuringUnitRepository extends JpaRepository<MeasuringUnit, Long> {
 
-    Page<MeasuringUnit> findAllByUserEmailEquals(String email, Pageable pageable);
+    Page<MeasuringUnit> findAllByUser_EmailEquals(String email, Pageable pageable);
 
-    Page<MeasuringUnit> findAllByUserEmailEqualsAndNameContaining(String email, String name, Pageable pageable);
+    Page<MeasuringUnit> findAllByUser_EmailEqualsAndNameContaining(String email, String name, Pageable pageable);
 
-    Optional<MeasuringUnit> findByUserEmailEqualsAndIdEquals(String email, Long id);
+    Optional<MeasuringUnit> findByUser_EmailEqualsAndIdEquals(String email, Long id);
 
-    Optional<MeasuringUnit> findByUserEmailEqualsAndNameEquals(String email, String name);
+    Optional<MeasuringUnit> findByUser_EmailEqualsAndNameEquals(String email, String name);
 }
