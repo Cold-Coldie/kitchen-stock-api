@@ -36,24 +36,16 @@ public class ItemServiceImpl implements ItemService {
     private MeasuringUnitRepository measuringUnitRepository;
 
     @Override
-    public Page<Item> getAllItems(Pageable pageable) {
+    public Page<Item> getItemsByNameAndMeasuringId(String name, Long measuringId, Pageable pageable) {
         try {
             UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
             if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
 
-            return itemRepository.findAllByUser_EmailEquals(userDetails.getUsername(), pageable);
-        } catch (UnexpectedErrorException exception) {
-            throw new UnexpectedErrorException("An unexpected error occurred.");
-        }
-    }
-
-    @Override
-    public Page<Item> getItemsByName(String name, Pageable pageable) {
-        try {
-            UserDetails userDetails = SecurityUtils.getCurrentUserDetails();
-            if (userDetails == null) throw new NotAuthenticatedException("Please, re-authenticate.");
-
-            return itemRepository.findAllByUser_EmailEqualsAndNameContaining(userDetails.getUsername(), name, pageable);
+            if (measuringId == null) {
+                return itemRepository.findAllByUser_EmailEqualsAndNameContaining(userDetails.getUsername(), name, pageable);
+            } else {
+                return itemRepository.findAllByUser_EmailEqualsAndNameContainingAndMeasuringUnit_IdEquals(userDetails.getUsername(), name, measuringId, pageable);
+            }
         } catch (UnexpectedErrorException exception) {
             throw new UnexpectedErrorException("An unexpected error occurred.");
         }

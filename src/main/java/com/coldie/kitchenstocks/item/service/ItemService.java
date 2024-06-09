@@ -8,9 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface ItemService {
 
-    Page<Item> getAllItems(Pageable pageable);
-
-    Page<Item> getItemsByName(String name, Pageable pageable);
+    Page<Item> getItemsByNameAndMeasuringId(String name, Long measuringId, Pageable pageable);
 
     Item getItemById(Long id);
 
